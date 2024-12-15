@@ -1,4 +1,8 @@
 import re
+import os
+
+# Change the working directory
+os.chdir("D:/prompt-engineering-for-generative-ai-examples/content/chapter_3")
 
 # openai_result = generate_article_outline(prompt)
 

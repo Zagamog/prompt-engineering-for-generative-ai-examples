@@ -1,5 +1,35 @@
-# 1. Import the package:
+# Needed lot of workaround because of ssl error
+# https://stackoverflow.com/questions/76106366/how-to-use-tiktoken-in-offline-mode-computer#76107077
+
+import tiktoken_ext.openai_public
+import inspect
 import tiktoken
+
+print(dir(tiktoken_ext.openai_public))
+# The encoder we want is cl100k_base, we see this as a possible function
+
+print(inspect.getsource(tiktoken_ext.openai_public.cl100k_base))
+# The URL should be in the 'load_tiktoken_bpe function call'
+
+import hashlib
+
+blobpath = "https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken"
+cache_key = hashlib.sha1(blobpath.encode()).hexdigest()
+print(cache_key)
+
+import os
+
+tiktoken_cache_dir = "C:/Users/wb164718/.cache/tiktoken"
+os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_cache_dir
+
+# validate
+assert os.path.exists(os.path.join(tiktoken_cache_dir, cache_key))
+
+encoding = tiktoken.get_encoding("cl100k_base")
+encoding.encode("Hello, world")
+
+
+
 
 # 2. Load an encoding with tiktoken.get_encoding()
 encoding = tiktoken.get_encoding("cl100k_base")
@@ -7,6 +37,9 @@ encoding = tiktoken.get_encoding("cl100k_base")
 # 3. Turn some text into tokens with encoding.encode()
 print(encoding.encode("Learning how to use Tiktoken is fun!"))
 print(encoding.decode([1061, 15009, 374, 264, 2294, 1648, 311, 4048, 922, 15592, 0]))
+
+print(encoding.decode([48567, 1268, 311, 1005, 73842, 5963, 374, 2523, 0]))
+print(encoding.decode([48567, 1855, 311, 1005, 73842, 5963, 374, 2523, 0]))
 
 
 def count_tokens(text_string: str, encoding_name: str) -> int:
@@ -74,40 +107,3 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
-
-
-example_messages = [
-    {
-        "role": "system",
-        "content": "You are a helpful, pattern-following assistant that translates corporate jargon into plain English.",
-    },
-    {
-        "role": "system",
-        "name": "example_user",
-        "content": "New synergies will help drive top-line growth.",
-    },
-    {
-        "role": "system",
-        "name": "example_assistant",
-        "content": "Things working well together will increase revenue.",
-    },
-    {
-        "role": "system",
-        "name": "example_user",
-        "content": "Let's circle back when we have more bandwidth to touch base on opportunities for increased leverage.",
-    },
-    {
-        "role": "system",
-        "name": "example_assistant",
-        "content": "Let's talk later when we're less busy about how to do better.",
-    },
-    {
-        "role": "user",
-        "content": "This late pivot means we don't have time to boil the ocean for the client deliverable.",
-    },
-]
-
-for model in ["gpt-3.5-turbo-0301", "gpt-4-0314"]:
-    print(model)
-    # example token count from the function defined above
-    print(f"{num_tokens_from_messages(example_messages, model)} prompt tokens counted by num_tokens_from_messages().")

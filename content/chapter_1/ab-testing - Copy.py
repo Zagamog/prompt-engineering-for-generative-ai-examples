@@ -113,13 +113,13 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 2,
+   "execution_count": 5,
    "metadata": {},
    "outputs": [
     {
      "data": {
       "application/vnd.jupyter.widget-view+json": {
-       "model_id": "e7108d737831471c9d57d71fe7f2fb35",
+       "model_id": "277689943cf54f51a1cd6ea8d8aaa8cf",
        "version_major": 2,
        "version_minor": 0
       },
@@ -133,7 +133,7 @@
     {
      "data": {
       "application/vnd.jupyter.widget-view+json": {
-       "model_id": "502498d592e04890a9fef681a16a3882",
+       "model_id": "400ef49132164151bf6d8cd49dda4ed3",
        "version_major": 2,
        "version_minor": 0
       },
@@ -147,26 +147,12 @@
     {
      "data": {
       "application/vnd.jupyter.widget-view+json": {
-       "model_id": "3aef5305585047048db7a9694e1f997b",
+       "model_id": "1603f93dec3d48d6a83a0e9464531f6b",
        "version_major": 2,
        "version_minor": 0
       },
       "text/plain": [
        "Label(value='Response: 1/10')"
-      ]
-     },
-     "metadata": {},
-     "output_type": "display_data"
-    },
-    {
-     "data": {
-      "application/vnd.jupyter.widget-view+json": {
-       "model_id": "8e638b16bf7543459f401dbadb4dc2c8",
-       "version_major": 2,
-       "version_minor": 0
-      },
-      "text/plain": [
-       "Output()"
       ]
      },
      "metadata": {},
@@ -178,79 +164,66 @@
     "from IPython.display import display\n",
     "import pandas as pd\n",
     "\n",
-    "# Load the responses.csv file\n",
+    "# load the responses.csv file\n",
     "df = pd.read_csv(\"responses.csv\")\n",
     "\n",
     "# Shuffle the dataframe\n",
     "df = df.sample(frac=1).reset_index(drop=True)\n",
     "\n",
-    "# Add a new column to store feedback\n",
-    "df['feedback'] = pd.Series(dtype='str')\n",
-    "\n",
-    "# Create an output widget for displaying results\n",
-    "output = widgets.Output()\n",
-    "\n",
-    "response_index = 0  # Initialize the response index\n",
-    "\n",
+    "# df is your dataframe and 'response' is the column with the \n",
+    "# text you want to test\n",
+    "response_index = 0\n",
+    "# add a new column to store feedback\n",
+    "df['feedback'] = pd.Series(dtype='str') \n",
     "\n",
     "def on_button_clicked(b):\n",
     "    global response_index\n",
-    "    # Convert thumbs up/down to 1/0\n",
+    "    #  convert thumbs up / down to 1 / 0\n",
     "    user_feedback = 1 if b.description == \"\\U0001F44D\" else 0\n",
     "\n",
-    "    # Update the feedback column\n",
+    "    # update the feedback column\n",
     "    df.at[response_index, 'feedback'] = user_feedback\n",
     "\n",
     "    response_index += 1\n",
     "    if response_index < len(df):\n",
     "        update_response()\n",
     "    else:\n",
-    "        # Save the feedback to a CSV file\n",
+    "        # save the feedback to a CSV file\n",
     "        df.to_csv(\"results.csv\", index=False)\n",
     "\n",
-    "        # Display results in the output widget\n",
-    "        with output:\n",
-    "            output.clear_output()  # Clear previous outputs if any\n",
-    "            print(\"A/B testing completed. Here's the results:\")\n",
-    "            # Calculate score and num rows for each variant\n",
-    "            summary_df = df.groupby('variant').agg(\n",
-    "                count=('feedback', 'count'),\n",
-    "                score=('feedback', 'mean')\n",
-    "            ).reset_index()\n",
-    "            display(summary_df)\n",
-    "\n",
-    "\n",
+    "        print(\"A/B testing completed. Here's the results:\")\n",
+    "        # Calculate score and num rows for each variant\n",
+    "        summary_df = df.groupby('variant').agg(\n",
+    "            count=('feedback', 'count'), \n",
+    "            score=('feedback', 'mean')).reset_index()\n",
+    "        print(summary_df)\n",
+    "        \n",
     "def update_response():\n",
-    "    if response_index < len(df):\n",
-    "        new_response = df.iloc[response_index]['response']\n",
-    "        if pd.notna(new_response):\n",
-    "            new_response = \"<p>\" + new_response + \"</p>\"\n",
-    "        else:\n",
-    "            new_response = \"<p>No response</p>\"\n",
-    "        response.value = new_response\n",
-    "        count_label.value = f\"Response: {response_index + 1}/{len(df)}\"\n",
+    "    new_response = df.iloc[response_index]['response']\n",
+    "    if pd.notna(new_response):\n",
+    "        new_response = \"<p>\" + new_response + \"</p>\"\n",
     "    else:\n",
-    "        response.value = \"<p>All responses completed. Check the results below.</p>\"\n",
+    "        new_response = \"<p>No response</p>\"\n",
+    "    response.value = new_response\n",
+    "    count_label.value = f\"Response: {response_index + 1}\"\n",
+    "    count_label.value += f\"/{len(df)}\"\n",
     "\n",
-    "\n",
-    "# Widgets for displaying the current response and progress\n",
     "response = widgets.HTML()\n",
     "count_label = widgets.Label()\n",
     "\n",
-    "update_response()  # Initialize the response display\n",
+    "update_response()\n",
     "\n",
-    "# Create buttons for thumbs up and thumbs down\n",
     "thumbs_up_button = widgets.Button(description='\\U0001F44D')\n",
     "thumbs_up_button.on_click(on_button_clicked)\n",
     "\n",
-    "thumbs_down_button = widgets.Button(description='\\U0001F44E')\n",
+    "thumbs_down_button = widgets.Button(\n",
+    "    description='\\U0001F44E')\n",
     "thumbs_down_button.on_click(on_button_clicked)\n",
     "\n",
-    "# Arrange buttons in a horizontal box\n",
-    "button_box = widgets.HBox([thumbs_down_button, thumbs_up_button])\n",
+    "button_box = widgets.HBox([thumbs_down_button, \n",
+    "thumbs_up_button])\n",
     "\n",
-    "# Display the response, buttons, count label, and output widget\n",
-    "display(response, button_box, count_label, output)\n"
+    "display(response, button_box, count_label)"
    ]
   },
   {
